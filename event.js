@@ -1,42 +1,61 @@
-// Execute the inject.js in a tab and call a method,
-// passing the result to a callback function.
-function injectedMethod (tab, method, callback) {
-  chrome.tabs.executeScript(tab.id, { file: 'inject.js' }, function(){
-    chrome.tabs.sendMessage(tab.id, { method: method }, callback);
-  });
-}
 
-function getBgColors (tab) {
-  // When we get a result back from the getBgColors
-  // method, alert the data
-  injectedMethod(tab, 'getBgColors', function (response) {
-    alert('Elements in tab: ' + response.data);
-    return true;
-  });
-}
+var interval;
 
-function createOrAddBookmark (tab) {
-	alert("yo");
-	chrome.bookmarks.getTree(function(bookmarks) {
-		alert(bookmarks[0].children[0].title);
-	});
-}
+var timeoutFn = function(details) {
+	clearTimeout(interval);
+	interval = setTimeout(function() {
+		getUsername(details);
+	}, 20000);
+};
 
-function addOrUpdateBookmark(id, node) {
-    chrome.bookmarks.get(node.parentId, function (parent) {
-        if (parent !== false) {
-            if(parent.length === 1 && parent[0].title === "HumbleMarks") {
-            	alert(node.url);
-            }
-        }
+var timeoutClear = function() {
+	clearTimeout(interval);
+};
+
+function getUsername(details) {
+
+    chrome.tabs.executeScript(null,{file:"twitter.script.js"}, function(arr) {
+    	// console.log(chrome.bookmarks.getTree.children[0].title);
+    	if(arr) {
+    		console.log(arr[0]);
+    		// chrome.bookmarks.getTree(function(nodes) {
+    		// 	console.log(nodes[0].children[1].children);
+    		// });
+	    	chrome.bookmarks.search({title:"HumbleMarks", url:null}, function(nodes) {
+	    		if(nodes.length > 0) {
+	    			chrome.bookmarks.getSubTree(nodes[0].id, function(results) {
+	    				if(results.length === 0 && results[0].title === "HumbleMarks" && !results[0].url)
+	    				var bookmarks;
+	    				for(var i in results[0].children) {
+	    					var child = results[0].children[i];
+	    					console.log(child);
+	    					if(child.url) {
+	    						if(!bookmarks) {
+	    							bookmarks = [{
+		    							title: child.title,
+		    							url: child.url
+		    						}];
+	    						} else {
+	    						bookmarks.push({
+		    							title: child.title,
+		    							url: child.url
+		    						});
+		    					}
+	    					}
+	    				}
+	    				var index = Math.floor(Math.random() * bookmarks.length);
+	    				var bookmark = bookmarks[index];
+	    				jQuery.get('http://localhost:3000/tweet/' + arr[0] + '/'+encodeURIComponent(bookmark.url)+'/' + encodeURIComponent(bookmark.title),function(data) {
+	    						console.log(data);
+	    				});
+	    			});
+	    		}
+	    	});
+    	}
+    	
     });
 }
 
-// When the browser action is clicked, call the
-// getBgColors function.
-// chrome.browserAction.onClicked.addListener(createOrAddBookmark);
-
-chrome.bookmarks.onCreated.addListener(onCreateBookmark);
-
+chrome.webNavigation.onHistoryStateUpdated.addListener(timeoutFn);
 
 
