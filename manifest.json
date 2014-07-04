@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+
+  "name": "Humble Giant",
+  "description": "This extension is stolen from Mike Swartz.",
+  "version": "1.0",
+  "background": {
+    "scripts": ["event.js"],
+    "persistent": false
+  },
+  "permissions": [
+    "<all_urls>",
+    "bookmarks"
+  ],
+  "browser_action": {
+    "default_icon": "humblr-icon.png"
+  }
+}
